@@ -1,5 +1,14 @@
 menu "Satellite Cornelius"
 
+    config SATELLITE_OTA
+        bool "Mises à jour Wi-Fi authentifiées (installation USB initiale requise)"
+        default n
+        help
+            Activer uniquement avec la table partitions-ota.csv, le bootloader
+            avec retour arrière et une clé propre à la carte dans main/ota_key.h.
+            Voir docs/ota.md. Service HTTP local sur TCP 8081, sans accès WAN.
+
+
     config SATELLITE_WIFI_SSID
         string "Wi-Fi : nom du réseau (2,4 GHz)"
         default ""

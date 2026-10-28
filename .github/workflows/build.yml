@@ -20,3 +20,27 @@ jobs:
             build/bootloader/bootloader.bin
             build/partition_table/partition-table.bin
             build/flasher_args.json
+
+  ota-client-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s tests -v
+
+  ota-firmware:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Public build-only fixture. Never publish or deploy this firmware.
+      - name: Prepare disposable OTA build key
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          Path("main/ota_key.h").write_text("#pragma once\nstatic const unsigned char OTA_KEY[32] = {" + ",".join(str(n) for n in range(32)) + "};\n")
+          PY
+      - uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: v5.5.6
+          target: esp32s3
+          command: idf.py "-DSDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.ota.defaults" build
+      # Deliberately no upload-artifact step: this key is a public test fixture.

@@ -180,3 +180,7 @@ L’historique des versions est dans [CHANGELOG.md](CHANGELOG.md).
 Ce firmware est distribué, comme Cornelius, sous la [PolyForm Noncommercial License 1.0.0](LICENSE) : utilisation, partage et modification libres pour un usage non commercial, en gardant la ligne `Required Notice` du fichier `LICENSE`.
 
 Les composants ESP-IDF et la configuration reprise de xiaozhi-esp32 gardent leur propre licence : voir [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## Mises à jour Wi-Fi optionnelles
+
+Une extension OTA authentifiée, désactivée par défaut, permet les mises à jour depuis un PC Windows après une préparation USB initiale. Voir [la procédure et les limites](docs/ota.md).

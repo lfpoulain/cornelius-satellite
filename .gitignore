@@ -3,3 +3,15 @@ managed_components/
 # Contient le Wi-Fi et le jeton du satellite : jamais dans le dépôt.
 sdkconfig
 sdkconfig.old
+
+# OTA device keys and generated build settings must never be committed.
+main/ota_key.h
+*.dpapi
+.pio/
+ota-private/
+ota-artifacts/
+sdkconfig.*
+!sdkconfig.defaults
+!sdkconfig.ota.defaults
+__pycache__/
+platformio.ini

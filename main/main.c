@@ -6,6 +6,7 @@
  * haut-parleur est annulé sur la carte ; configuration par le portail puis l'association.
  */
 #include "audio.h"
+#include "ota.h"
 #include "board.h"
 #include "button.h"
 #include "config.h"
@@ -45,6 +46,7 @@ void app_main(void)
     audio_start();
     wifi_start();
     discovery_start();
+    satellite_ota_start();
     link_start();
     ESP_LOGI(TAG, "Satellite démarré (mémoire interne libre : %u Ko, PSRAM : %u Ko)",
              (unsigned)(heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024),

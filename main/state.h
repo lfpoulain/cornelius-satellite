@@ -15,6 +15,7 @@ typedef enum {
  * écrivain ; les lectures d'un octet ou d'un entier aligné sont atomiques sur l'ESP32-S3.
  */
 typedef struct {
+    volatile bool updating;      /* Authenticated OTA upload; audio paused. */
     volatile bool wifi;          /* Wi-Fi connecté (wifi.c) */
     volatile bool online;        /* « welcome » reçu (link.c) */
     volatile bool listen;        /* le serveur demande le micro (link.c) */
