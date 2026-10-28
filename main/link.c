@@ -380,7 +380,7 @@ static void start_client(const char *uri)
 
 void link_send_frame(const int16_t *frame)
 {
-    if (!satellite.online || !satellite.listen || satellite.muted || !frames || !frame_pool)
+    if (!satellite.online || !satellite.listen || satellite.muted || satellite.updating || !frames || !frame_pool)
         return;
     /* Bouton de vie privée pendant la conversation : plus aucun son ne part, même si le
      * serveur tarde à la fermer ou ne répond pas. */
