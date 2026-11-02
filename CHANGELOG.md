@@ -2,6 +2,13 @@
 
 Cette page retrace les versions du firmware, de la plus récente à la plus ancienne. La version est celle de `PROJECT_VER` dans `CMakeLists.txt`, annoncée à Cornelius dans `hello` et affichée dans **Administration → Satellites audio**.
 
+## 0.4.0 : sonnerie des alarmes (2026-11-02)
+
+**Ajouté**
+
+- Sonnerie des réveils, minuteurs et rappels réglés sur ce satellite : `hello` annonce `features: ["ring"]`, Cornelius envoie `ring` (`start`, `stop`). La sonnerie est synthétisée sur la carte, en boucle, volume de 35 % à 100 % en 30 s : « Bips » ou « Alerte » (tout autre son demandé joue les bips), carillon doux pour un rappel. L’anneau bat en ambre. Elle se tait pendant une conversation.
+- Un appui bref sur le bouton pendant la sonnerie l’arrête (`ring`, `action: stop`) au lieu de couper le micro.
+
 ## 0.3.0 : annulation d’écho et écoute attentive (2026-10-19)
 
 **Ajouté**

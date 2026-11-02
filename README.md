@@ -86,6 +86,13 @@ Aucune compilation à refaire, aucun jeton à recopier :
       Un appui bref sur <b>BOOT</b> coupe le micro, ou le rouvre. Le choix est gardé après un redémarrage.
     </td>
   </tr>
+  <tr>
+    <td valign="top">
+      <h4>⏰ Il sonne dans sa pièce</h4>
+      Un réveil, un minuteur ou un rappel réglé sur ce satellite y sonne (<code>ring</code>) : bips ou alerte, de plus en plus fort, carillon doux pour un rappel, synthétisés sur la carte. Une conversation coupe la sonnerie ; un appui bref sur <b>BOOT</b> l’arrête.
+    </td>
+    <td valign="top"></td>
+  </tr>
 </table>
 
 Pendant qu’il parle, les niveaux de l’annulation d’écho partent dans le journal de Cornelius (« Journal du satellite »).
@@ -103,6 +110,7 @@ Pendant qu’il parle, les niveaux de l’annulation d’écho partent dans le j
 | 🟢 couleur choisie, bref | « Cornelius » entendu |
 | 🟢 couleur choisie qui tourne | la conversation s’ouvre |
 | 🟢 couleur choisie, plus vive quand il parle | conversation en cours |
+| 🟡 ambre qui bat vite | une alarme sonne ici |
 | 🟡 ambre qui clignote | occupé : une conversation se tient ailleurs |
 | 🔴 rouge | micro coupé |
 | 🔴 rouge qui clignote | remise à zéro |

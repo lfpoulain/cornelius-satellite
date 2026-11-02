@@ -131,6 +131,9 @@ static void send_hello(void)
     cJSON_AddNumberToObject(hello, "protocol", SATELLITE_PROTOCOL);
     cJSON_AddStringToObject(hello, "firmware", esp_app_get_description()->version);
     cJSON_AddBoolToObject(hello, "aec", echo_active());
+    /* Ajouts du protocole que ce firmware connaît : la sonnerie des alarmes. */
+    cJSON *features = cJSON_AddArrayToObject(hello, "features");
+    cJSON_AddItemToArray(features, cJSON_CreateString("ring"));
     send_json(hello);
     if (satellite.muted) link_send_mic(true);
 }
@@ -203,6 +206,17 @@ static void handle_text(const char *body, size_t length)
         else if (state && strcmp(state, "ready") == 0) set_conversation(CONVERSATION_READY);
         else if (state && strcmp(state, "closed") == 0) set_conversation(CONVERSATION_IDLE);
         ESP_LOGI(TAG, "Conversation : %s", state ? state : "?");
+    } else if (strcmp(type, "ring") == 0) {
+        const char *state = cJSON_GetStringValue(cJSON_GetObjectItem(message, "state"));
+        const char *sound = cJSON_GetStringValue(cJSON_GetObjectItem(message, "sound"));
+        if (state && strcmp(state, "start") == 0) {
+            satellite.ring_sound = sound && strcmp(sound, "alerte") == 0 ? RING_ALERTE : RING_BIPS;
+            satellite.ring_soft = cJSON_IsTrue(cJSON_GetObjectItem(message, "soft"));
+            satellite.ringing = true;
+        } else if (state && strcmp(state, "stop") == 0) {
+            satellite.ringing = false;
+        }
+        ESP_LOGI(TAG, "Sonnerie : %s", state ? state : "?");
     } else if (strcmp(type, "volume") == 0) {
         const cJSON *volume = cJSON_GetObjectItem(message, "volume");
         if (cJSON_IsNumber(volume)) board_set_volume(volume->valueint);
@@ -222,6 +236,8 @@ static void handle_text(const char *body, size_t length)
 
 static void offline(void)
 {
+    /* Hors ligne, Cornelius fait sonner le miroir à la place. */
+    satellite.ringing = false;
     satellite.online = false;
     satellite.listen = false;
     satellite.pairing = false;
@@ -407,6 +423,15 @@ void link_send_mic(bool muted)
     cJSON_AddStringToObject(mic, "type", "mic");
     cJSON_AddBoolToObject(mic, "muted", muted);
     send_json(mic);
+}
+
+void link_send_ring_stop(void)
+{
+    if (!client || !esp_websocket_client_is_connected(client)) return;
+    cJSON *ring = cJSON_CreateObject();
+    cJSON_AddStringToObject(ring, "type", "ring");
+    cJSON_AddStringToObject(ring, "action", "stop");
+    send_json(ring);
 }
 
 void link_send_log(const char *message)

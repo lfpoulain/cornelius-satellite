@@ -23,6 +23,10 @@ typedef struct {
     volatile int64_t wake_at_us; /* dernier « wake », pour le signal lumineux (link.c) */
     volatile int64_t busy_at_us; /* dernier « busy » (link.c) */
     volatile bool speaking;      /* le haut-parleur joue un son audible (audio.c) */
+    /* Alarme qui sonne ici (message « ring ») (link.c, button.c) */
+    volatile bool ringing;
+    volatile bool ring_soft;     /* rappel seul : carillon doux et espacé */
+    volatile uint8_t ring_sound; /* RING_BIPS ou RING_ALERTE */
     /* Réglages de l'administration (message « settings », gardés en NVS) (link.c, config.c) */
     volatile uint8_t led_r, led_g, led_b; /* couleur principale de l'anneau */
     volatile uint8_t led_brightness;      /* 0 à 10 ; 0 : alertes seulement */
@@ -33,5 +37,8 @@ typedef struct {
     volatile int64_t identify_until_us;   /* « Faire clignoter » demandé (link.c) */
     volatile int64_t reset_at_us;         /* bouton tenu : réinitialisation (button.c) */
 } satellite_state_t;
+
+/** Sonneries que le satellite sait jouer ; un autre son demandé joue les bips. */
+enum { RING_BIPS, RING_ALERTE };
 
 extern satellite_state_t satellite;

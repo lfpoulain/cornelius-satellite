@@ -1,5 +1,6 @@
 #include "audio.h"
 
+#include <math.h>
 #include <stdbool.h>
 #include <string.h>
 #include "board.h"
@@ -26,6 +27,54 @@ static const char *TAG = "audio";
 
 static RingbufHandle_t play_buffer;
 static volatile bool flush_requested;
+
+/* Sonnerie : synthétisée ici, Cornelius n'envoie que « ring ». Motifs de 1,6 s (8 s pour un
+ * rappel), volume de 35 % à 100 % en 30 s, comme sur le miroir. */
+#define RING_CHUNK_SAMPLES 960
+#define RING_PERIOD (BOARD_SAMPLE_RATE * 8 / 5)
+#define RING_SOFT_PERIOD (BOARD_SAMPLE_RATE * 8)
+#define RING_RAMP_US 30000000
+#define TWO_PI 6.28318530718f
+
+/* Un échantillon de la sonnerie, de -1 à 1, à la position `n` du motif. */
+static float ring_value(uint32_t n)
+{
+    const float rate = BOARD_SAMPLE_RATE;
+    if (satellite.ring_soft) {
+        /* Carillon : deux notes montantes qui s'éteignent. */
+        const float t = (n % RING_SOFT_PERIOD) / rate;
+        float value = 0.6f * sinf(TWO_PI * 659.25f * t) * expf(-t / 0.25f);
+        if (t >= 0.13f) {
+            const float u = t - 0.13f;
+            value += 0.5f * sinf(TWO_PI * 987.77f * u) * expf(-u / 0.3f);
+        }
+        return value;
+    }
+    const uint32_t at = n % RING_PERIOD;
+    if (satellite.ring_sound == RING_ALERTE) {
+        /* Quatre tons de 0,2 s, alternés 660 / 880 Hz. */
+        const uint32_t step = BOARD_SAMPLE_RATE * 22 / 100, length = BOARD_SAMPLE_RATE / 5;
+        const uint32_t index = at / step, offset = at % step;
+        if (index >= 4 || offset >= length) return 0;
+        const float t = offset / rate;
+        const float edge = fminf(1.0f, fminf(t, (length - offset) / rate) / 0.01f);
+        return 0.7f * edge * sinf(TWO_PI * (index % 2 ? 880.0f : 660.0f) * t);
+    }
+    /* Quatre bips carrés de 90 ms, à 1 046 Hz. */
+    const uint32_t step = BOARD_SAMPLE_RATE * 16 / 100, length = BOARD_SAMPLE_RATE * 9 / 100;
+    const uint32_t index = at / step, offset = at % step;
+    if (index >= 4 || offset >= length) return 0;
+    return sinf(TWO_PI * 1046.5f * (offset / rate)) >= 0 ? 0.45f : -0.45f;
+}
+
+/* Un morceau de sonnerie ; `started_us` : début de la sonnerie, pour la montée du volume. */
+static void ring_chunk(int16_t *out, uint32_t *position, int64_t started_us)
+{
+    const float elapsed = (esp_timer_get_time() - started_us) / (float)RING_RAMP_US;
+    const float gain = satellite.ring_soft ? 0.5f : 0.35f + 0.65f * fminf(1.0f, elapsed);
+    for (size_t i = 0; i < RING_CHUNK_SAMPLES; i++)
+        out[i] = (int16_t)(ring_value((*position)++) * gain * 0.5f * 32767.0f);
+}
 
 static void capture_task(void *arg)
 {
@@ -72,7 +121,22 @@ static void playback_task(void *arg)
 {
     bool playing = false;
     int64_t quiet_since = 0;
+    static int16_t ring[RING_CHUNK_SAMPLES];
+    uint32_t ring_position = 0;
+    int64_t ring_started = 0;
     for (;;) {
+        /* Une alarme sonne, hors conversation : la sonnerie passe avant tout le reste ;
+         * board_speaker_write cadence la boucle au rythme du haut-parleur. */
+        if (satellite.ringing && satellite.conversation == CONVERSATION_IDLE) {
+            if (!ring_started) {
+                ring_started = esp_timer_get_time();
+                ring_position = 0;
+            }
+            ring_chunk(ring, &ring_position, ring_started);
+            board_speaker_write(ring, RING_CHUNK_SAMPLES);
+            continue;
+        }
+        ring_started = 0;
         if (flush_requested) {
             size_t size;
             void *item;

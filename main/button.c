@@ -52,6 +52,11 @@ static void button_task(void *arg)
             }
         } else if (pressed_for >= 50) { /* relâché entre 1 et 5 s : sans effet */
             pressed_for = 0;
+        } else if (pressed_for >= 2 && satellite.ringing) { /* appui bref pendant une alarme */
+            satellite.ringing = false;
+            link_send_ring_stop();
+            ESP_LOGI(TAG, "Sonnerie arrêtée");
+            pressed_for = 0;
         } else if (pressed_for >= 2) { /* appui bref (anti-rebond 40 ms) : micro coupé ou rouvert */
             satellite.muted = !satellite.muted;
             save_muted(satellite.muted);

@@ -63,6 +63,9 @@ static void render(float seconds, int64_t now_us)
         return fill(white, ((now_us / 250000) % 2) ? 0.9f : 0);
     /* Portail de configuration ouvert : bleu qui respire. */
     if (satellite.setup && !satellite.wifi) return fill(blue, pulse(seconds, 3.0f));
+    /* Alarme : ambre qui bat vite, même micro coupé. */
+    if (satellite.ringing && satellite.online && satellite.conversation == CONVERSATION_IDLE)
+        return fill(amber, pulse(seconds, 0.8f));
     if (satellite.muted) return fill(red, 0.35f);
     if (!satellite.wifi) return spin(blue, seconds);
     /* En attente d'association : blanc qui respire. */
