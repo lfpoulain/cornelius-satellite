@@ -9,6 +9,11 @@ Cette page retrace les versions du firmware, de la plus récente à la plus anci
 - Sonnerie des réveils, minuteurs et rappels réglés sur ce satellite : `hello` annonce `features: ["ring"]`, Cornelius envoie `ring` (`start`, `stop`). La sonnerie est synthétisée sur la carte, en boucle, volume de 35 % à 100 % en 30 s : « Bips » ou « Alerte » (tout autre son demandé joue les bips), carillon doux pour un rappel. L’anneau bat en ambre. Elle se tait pendant une conversation.
 - Un appui bref sur le bouton pendant la sonnerie l’arrête (`ring`, `action: stop`) au lieu de couper le micro.
 
+**Corrigé**
+
+- Avec deux Cornelius sur le réseau, le satellite prenait le premier trouvé par mDNS et restait bloqué sur sa clé refusée. Il passe maintenant un Cornelius dont l’empreinte annoncée (`key`) n’est pas celle retenue à l’association.
+- Un ordinateur qui annonce aussi des adresses virtuelles (Hyper-V, Docker) : le satellite prend, parmi toutes les réponses mDNS, l’adresse la plus proche de la sienne (plus long préfixe commun), et non plus la première. Un satellite sur un autre sous-réseau de la maison (10.0.1.x pour un ordinateur en 10.0.0.x) trouve ainsi le bon chemin.
+
 ## 0.3.0 : annulation d’écho et écoute attentive (2026-10-19)
 
 **Ajouté**
