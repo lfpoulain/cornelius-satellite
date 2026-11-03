@@ -20,3 +20,5 @@ void link_send_mic(bool muted);
 
 /** Mesure à inscrire dans le journal de Cornelius (200 caractères, une par seconde au plus). */
 void link_send_log(const char *message);
+
+void link_send_gesture(const char *gesture);

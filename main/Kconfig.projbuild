@@ -50,4 +50,10 @@ menu "Satellite Cornelius"
             dans l'administration, Cornelius garde le micro ouvert pendant qu'il parle.
             Désactivée : semi-duplex, le micro est coupé pendant que Cornelius parle.
 
+    config SATELLITE_GESTURES
+        bool "Capteur de gestes PAJ7620 optionnel (I2C 0x73)"
+        default n
+        help
+            Activer uniquement si un PAJ7620 est installé sur SDA11/SCL10.
+            Sans capteur, l'audio reste disponible et aucun geste n'est annoncé.
 endmenu

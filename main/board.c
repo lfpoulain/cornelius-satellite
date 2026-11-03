@@ -4,6 +4,9 @@
  * reprise : sortie ES8311 en mode standard, entrée ES7210 en TDM sur 4 voies.
  */
 #include "board.h"
+#include "gestures.h"
+#include "leds.h"
+#include "state.h"
 
 #include "driver/i2c_master.h"
 #include "driver/i2s_std.h"
@@ -206,6 +209,7 @@ static esp_err_t init_codecs(void)
 esp_err_t board_init(void)
 {
     ESP_RETURN_ON_ERROR(init_i2c(), TAG, "bus I2C");
+    gestures_init(i2c_bus);
     ESP_RETURN_ON_ERROR(init_expander(), TAG, "extenseur");
     ESP_RETURN_ON_ERROR(init_i2s(), TAG, "I2S");
     ESP_RETURN_ON_ERROR(init_codecs(), TAG, "codecs");
@@ -228,9 +232,15 @@ esp_err_t board_speaker_write(const int16_t *samples, size_t count)
                : ESP_FAIL;
 }
 
+static int current_volume=-1;
+int board_get_volume(void) { return current_volume; }
+
 void board_set_volume(int volume)
 {
     if (volume < 0) volume = 0;
     if (volume > 100) volume = 100;
-    esp_codec_dev_set_out_vol(speaker, volume);
+    if (esp_codec_dev_set_out_vol(speaker, volume)!=ESP_CODEC_DEV_OK) return;
+    const bool changed=current_volume>=0 && current_volume!=volume;
+    current_volume=volume;
+    if (changed && satellite.online) leds_volume_feedback(volume);
 }
