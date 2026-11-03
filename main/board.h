@@ -28,3 +28,5 @@ esp_err_t board_speaker_write(const int16_t *samples, size_t count);
 
 /** Volume du haut-parleur, de 0 à 100. */
 void board_set_volume(int volume);
+
+int board_get_volume(void);

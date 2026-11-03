@@ -12,6 +12,11 @@
 #include "state.h"
 
 static const char *TAG = "button";
+static volatile int requested_mute=-1;
+static portMUX_TYPE mute_lock=portMUX_INITIALIZER_UNLOCKED;
+void button_request_mute(bool muted) {
+    portENTER_CRITICAL(&mute_lock); requested_mute=muted?1:0; portEXIT_CRITICAL(&mute_lock);
+}
 
 #define BUTTON_GPIO GPIO_NUM_0
 
@@ -39,6 +44,14 @@ static void button_task(void *arg)
 {
     int pressed_for = 0;
     for (;;) {
+        portENTER_CRITICAL(&mute_lock);
+        int requested=requested_mute; requested_mute=-1;
+        portEXIT_CRITICAL(&mute_lock);
+        if (requested>=0) {
+            satellite.muted=requested!=0;
+            save_muted(satellite.muted);
+            link_send_mic(satellite.muted);
+        }
         const bool down = gpio_get_level(BUTTON_GPIO) == 0;
         if (down) {
             /* Tenu 5 s : réinitialisation, l'anneau clignote en rouge puis le satellite repart
