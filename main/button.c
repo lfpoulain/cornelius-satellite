@@ -59,7 +59,9 @@ static void button_task(void *arg)
             pressed_for = 0;
         } else if (pressed_for >= 2 && satellite.session_end &&
                    satellite.conversation != CONVERSATION_IDLE) {
-            /* appui bref pendant la conversation : la fermer, sans attendre le silence */
+            /* appui bref pendant la conversation : le micro se tait tout de suite, puis Cornelius
+             * ferme la conversation sans attendre le silence */
+            satellite.end_pressed_at_us = esp_timer_get_time();
             link_send_session_end();
             ESP_LOGI(TAG, "Fin de conversation demandée");
             pressed_for = 0;

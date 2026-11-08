@@ -151,6 +151,7 @@ static void send_pair(void)
 static void set_conversation(conversation_t next)
 {
     if (satellite.conversation == next) return;
+    if (satellite.conversation == CONVERSATION_IDLE) satellite.conversation_at_us = esp_timer_get_time();
     satellite.conversation = next;
     /* Fin de conversation : plus rien à jouer de la précédente. */
     if (next != CONVERSATION_READY) audio_play_flush();
@@ -378,6 +379,11 @@ static void start_client(const char *uri)
 void link_send_frame(const int16_t *frame)
 {
     if (!satellite.online || !satellite.listen || satellite.muted || !frames || !frame_pool)
+        return;
+    /* Bouton de vie privée pendant la conversation : plus aucun son ne part, même si le
+     * serveur tarde à la fermer ou ne répond pas. */
+    if (satellite.conversation != CONVERSATION_IDLE &&
+        satellite.end_pressed_at_us > satellite.conversation_at_us)
         return;
     /* La tâche du micro ne doit jamais attendre le Wi-Fi : la trame est copiée dans un
      * emplacement libre et confiée à la tâche d'envoi. File pleine : la plus ancienne part. */
