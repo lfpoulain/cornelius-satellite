@@ -57,6 +57,12 @@ static void button_task(void *arg)
             link_send_ring_stop();
             ESP_LOGI(TAG, "Sonnerie arrêtée");
             pressed_for = 0;
+        } else if (pressed_for >= 2 && satellite.session_end &&
+                   satellite.conversation != CONVERSATION_IDLE) {
+            /* appui bref pendant la conversation : la fermer, sans attendre le silence */
+            link_send_session_end();
+            ESP_LOGI(TAG, "Fin de conversation demandée");
+            pressed_for = 0;
         } else if (pressed_for >= 2) { /* appui bref (anti-rebond 40 ms) : micro coupé ou rouvert */
             satellite.muted = !satellite.muted;
             save_muted(satellite.muted);

@@ -2,6 +2,12 @@
 
 Cette page retrace les versions du firmware, de la plus récente à la plus ancienne. La version est celle de `PROJECT_VER` dans `CMakeLists.txt`, annoncée à Cornelius dans `hello` et affichée dans **Administration → Satellites audio**.
 
+## Non publié
+
+**Ajouté**
+
+- Un appui bref sur le bouton pendant une conversation la ferme tout de suite (`session`, `action: end`), sans attendre le silence. Seulement si Cornelius annonce `features: ["session_end"]` dans `welcome` ; avec un Cornelius plus ancien, l’appui coupe le micro comme avant.
+
 ## 0.4.0 : sonnerie des alarmes (2026-11-02)
 
 **Ajouté**

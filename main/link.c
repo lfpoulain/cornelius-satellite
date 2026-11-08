@@ -189,6 +189,16 @@ static void handle_text(const char *body, size_t length)
         const cJSON *volume = cJSON_GetObjectItem(message, "volume");
         const char *name = cJSON_GetStringValue(cJSON_GetObjectItem(message, "name"));
         if (cJSON_IsNumber(volume)) board_set_volume(volume->valueint);
+        /* Un serveur plus ancien ne ferme pas la conversation au bouton : le bouton garde
+         * alors son rôle de micro. */
+        bool session_end = false;
+        const cJSON *feature = NULL;
+        cJSON_ArrayForEach(feature, cJSON_GetObjectItem(message, "features"))
+        {
+            const char *value = cJSON_GetStringValue(feature);
+            if (value && strcmp(value, "session_end") == 0) session_end = true;
+        }
+        satellite.session_end = session_end;
         ESP_LOGI(TAG, "Accueilli par Cornelius : « %s »", name ? name : "?");
         satellite.online = true;
     } else if (strcmp(type, "listen") == 0) {
@@ -239,6 +249,7 @@ static void offline(void)
     /* Hors ligne, Cornelius fait sonner le miroir à la place. */
     satellite.ringing = false;
     satellite.online = false;
+    satellite.session_end = false;
     satellite.listen = false;
     satellite.pairing = false;
     set_conversation(CONVERSATION_IDLE);
@@ -432,6 +443,15 @@ void link_send_ring_stop(void)
     cJSON_AddStringToObject(ring, "type", "ring");
     cJSON_AddStringToObject(ring, "action", "stop");
     send_json(ring);
+}
+
+void link_send_session_end(void)
+{
+    if (!client || !esp_websocket_client_is_connected(client)) return;
+    cJSON *session = cJSON_CreateObject();
+    cJSON_AddStringToObject(session, "type", "session");
+    cJSON_AddStringToObject(session, "action", "end");
+    send_json(session);
 }
 
 void link_send_log(const char *message)

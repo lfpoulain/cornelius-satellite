@@ -20,6 +20,8 @@ typedef struct {
     volatile bool listen;        /* le serveur demande le micro (link.c) */
     volatile bool muted;         /* bouton de vie privée (button.c) */
     volatile conversation_t conversation; /* (link.c) */
+    /* Le serveur sait fermer la conversation au bouton (« welcome », features : session_end) */
+    volatile bool session_end;
     volatile int64_t wake_at_us; /* dernier « wake », pour le signal lumineux (link.c) */
     volatile int64_t busy_at_us; /* dernier « busy » (link.c) */
     volatile bool speaking;      /* le haut-parleur joue un son audible (audio.c) */
