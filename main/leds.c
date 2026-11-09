@@ -1,4 +1,5 @@
 #include "leds.h"
+#include "volume-meter.h"
 
 #include <math.h>
 #include "esp_log.h"
@@ -19,6 +20,20 @@ static const char *TAG = "leds";
 #define LED_FULL 90
 
 static led_strip_handle_t strip;
+static portMUX_TYPE volume_lock=portMUX_INITIALIZER_UNLOCKED;
+static int shown_volume;
+
+static int64_t volume_until;
+void leds_volume_feedback(int volume) {
+    portENTER_CRITICAL(&volume_lock);
+    shown_volume=volume<0?0:volume>100?100:volume;
+    volume_until=esp_timer_get_time()+2500000;
+
+    portEXIT_CRITICAL(&volume_lock);
+}
+
+
+
 
 typedef struct {
     uint8_t r, g, b;
@@ -74,6 +89,20 @@ static void render(float seconds, int64_t now_us)
     if (!satellite.online) return fill(orange, pulse(seconds, 2.0f) * 0.6f);
     if (now_us - satellite.busy_at_us < 1200000)
         return fill(amber, ((now_us - satellite.busy_at_us) / 200000) % 2 ? 0 : 0.8f);
+    // Alerts and privacy indicators above always outrank this temporary meter.
+    portENTER_CRITICAL(&volume_lock);
+    const int volume=shown_volume;
+    const bool show_volume=now_us<volume_until;
+    portEXIT_CRITICAL(&volume_lock);
+    if (show_volume) {
+
+        const int brightness=satellite.led_brightness*LED_FULL/10;
+        for (int i=0;i<LED_COUNT;i++) {
+            const int level=volume_meter_level(volume,i,LED_COUNT);
+            led_strip_set_pixel(strip,i,0,brightness*level/255,brightness*level/255);
+        }
+        return;
+    }
     if (satellite.conversation == CONVERSATION_CONNECTING) return spin(accent, seconds);
     if (satellite.conversation == CONVERSATION_READY)
         return fill(accent, satellite.speaking ? pulse(seconds, 0.6f) : 0.3f);

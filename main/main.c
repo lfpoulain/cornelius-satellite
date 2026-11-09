@@ -8,6 +8,7 @@
 #include "audio.h"
 #include "ota.h"
 #include "board.h"
+#include "gestures.h"
 #include "button.h"
 #include "config.h"
 #include "discovery.h"
@@ -48,6 +49,7 @@ void app_main(void)
     discovery_start();
     satellite_ota_start();
     link_start();
+    gestures_start();
     ESP_LOGI(TAG, "Satellite démarré (mémoire interne libre : %u Ko, PSRAM : %u Ko)",
              (unsigned)(heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024),
              (unsigned)(heap_caps_get_free_size(MALLOC_CAP_SPIRAM) / 1024));

@@ -1,5 +1,9 @@
 #define MBEDTLS_ALLOW_PRIVATE_ACCESS
 #include "link.h"
+#include "gestures.h"
+#include "button.h"
+#include "leds.h"
+#include "board.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -134,6 +138,8 @@ static void send_hello(void)
     /* Ajouts du protocole que ce firmware connaît : la sonnerie des alarmes. */
     cJSON *features = cJSON_AddArrayToObject(hello, "features");
     cJSON_AddItemToArray(features, cJSON_CreateString("ring"));
+    if (gestures_ready()) cJSON_AddItemToArray(features, cJSON_CreateString("gestures"));
+    cJSON_AddItemToArray(features, cJSON_CreateString("mic_toggle"));
     send_json(hello);
     if (satellite.muted) link_send_mic(true);
 }
@@ -228,6 +234,9 @@ static void handle_text(const char *body, size_t length)
             satellite.ringing = false;
         }
         ESP_LOGI(TAG, "Sonnerie : %s", state ? state : "?");
+    } else if (strcmp(type, "mute") == 0) {
+        const cJSON *muted=cJSON_GetObjectItem(message,"muted");
+        if (cJSON_IsTrue(muted)) button_request_mute();
     } else if (strcmp(type, "volume") == 0) {
         const cJSON *volume = cJSON_GetObjectItem(message, "volume");
         if (cJSON_IsNumber(volume)) board_set_volume(volume->valueint);
@@ -469,4 +478,12 @@ void link_send_log(const char *message)
     if (log_pending) return;
     strlcpy(pending_log, message, sizeof(pending_log));
     log_pending = true;
+}
+
+void link_send_gesture(const char *gesture) {
+    if (!client || !satellite.online || !esp_websocket_client_is_connected(client)) return;
+    cJSON *event=cJSON_CreateObject();
+    cJSON_AddStringToObject(event,"type","gesture");
+    cJSON_AddStringToObject(event,"gesture",gesture);
+    send_json(event);
 }

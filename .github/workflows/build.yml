@@ -5,6 +5,13 @@ permissions:
 jobs:
   firmware:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - profile: default
+            defaults: sdkconfig.defaults
+          - profile: gestures
+            defaults: sdkconfig.defaults;sdkconfig.gestures.defaults
     steps:
       - uses: actions/checkout@v4
       # Même ESP-IDF que celle avec laquelle le firmware a été essayé sur la carte.
@@ -12,11 +19,22 @@ jobs:
         with:
           esp_idf_version: v5.5.6
           target: esp32s3
+          command: idf.py -D SDKCONFIG_DEFAULTS="${{ matrix.defaults }}" build
       - uses: actions/upload-artifact@v4
         with:
-          name: cornelius-satellite
+          name: ${{ matrix.profile == 'default' && 'cornelius-satellite' || 'cornelius-satellite-gestures' }}
           path: |
             build/cornelius-satellite.bin
             build/bootloader/bootloader.bin
             build/partition_table/partition-table.bin
             build/flasher_args.json
+
+  gesture-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          cc -std=c11 -Wall -Wextra -Werror -Imain tests/gesture-filter.test.c -o /tmp/gesture-test
+          /tmp/gesture-test
+          cc -std=c11 -Wall -Wextra -Werror -Imain tests/volume-meter.test.c -o /tmp/volume-test
+          /tmp/volume-test
