@@ -363,6 +363,8 @@ static void start_client(const char *uri)
         /* La clé épinglée identifie Cornelius ; le nom ou l'adresse du certificat n'ajoute rien
          * (il change avec les adresses de l'ordinateur). */
         .skip_cert_common_name_check = true,
+        /* Reconnecter aussi après une fermeture propre du serveur (maintenance). */
+        .enable_close_reconnect = true,
         .reconnect_timeout_ms = 3000,
         .network_timeout_ms = 10000,
         .buffer_size = 8192,
