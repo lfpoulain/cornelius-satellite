@@ -66,6 +66,7 @@ static void render(float seconds, int64_t now_us)
     /* Alarme : ambre qui bat vite, même micro coupé. */
     if (satellite.ringing && satellite.online && satellite.conversation == CONVERSATION_IDLE)
         return fill(amber, pulse(seconds, 0.8f));
+    if (satellite.updating) return fill(orange, pulse(seconds, 0.5f));
     if (satellite.muted) return fill(red, 0.35f);
     if (!satellite.wifi) return spin(blue, seconds);
     /* En attente d'association : blanc qui respire. */
