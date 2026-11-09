@@ -4,9 +4,17 @@ Cette page retrace les versions du firmware, de la plus récente à la plus anci
 
 ## Non publié
 
+Rien pour l’instant.
+
+## 0.5.0 : bouton qui ferme la conversation (2026-11-09)
+
 **Ajouté**
 
 - Un appui bref sur le bouton pendant une conversation la ferme tout de suite (`session`, `action: end`), sans attendre le silence. Seulement si Cornelius annonce `features: ["session_end"]` dans `welcome` ; avec un Cornelius plus ancien, l’appui coupe le micro comme avant. Le bouton reste un bouton de vie privée : dès l’appui, le satellite cesse d’envoyer le son de la conversation, sans attendre que Cornelius la ferme.
+
+**Corrigé**
+
+- Après une fermeture propre de la connexion WebSocket (par exemple un redémarrage de Cornelius à la même adresse), le satellite se reconnecte : `enable_close_reconnect` du client WebSocket, dont la version minimale passe à 1.5.
 
 ## 0.4.0 : sonnerie des alarmes (2026-11-02)
 
