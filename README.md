@@ -83,7 +83,7 @@ Aucune compilation à refaire, aucun jeton à recopier :
     </td>
     <td valign="top">
       <h4>🔇 Il se tait d’un geste</h4>
-      Un appui bref sur <b>BOOT</b> coupe le micro, ou le rouvre. Le choix est gardé après un redémarrage.
+      Un appui bref sur <b>BOOT</b> coupe le micro, ou le rouvre. Le choix est gardé après un redémarrage. Pendant une conversation, l’appui bref la ferme, si Cornelius le permet (<code>session_end</code>).
     </td>
   </tr>
   <tr>

@@ -21,5 +21,8 @@ void link_send_mic(bool muted);
 /** Bouton pendant la sonnerie : demande à Cornelius d'arrêter ce qui sonne ici. */
 void link_send_ring_stop(void);
 
+/** Bouton pendant la conversation : demande à Cornelius de la fermer. */
+void link_send_session_end(void);
+
 /** Mesure à inscrire dans le journal de Cornelius (200 caractères, une par seconde au plus). */
 void link_send_log(const char *message);

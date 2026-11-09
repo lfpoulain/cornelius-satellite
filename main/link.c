@@ -151,6 +151,7 @@ static void send_pair(void)
 static void set_conversation(conversation_t next)
 {
     if (satellite.conversation == next) return;
+    if (satellite.conversation == CONVERSATION_IDLE) satellite.conversation_at_us = esp_timer_get_time();
     satellite.conversation = next;
     /* Fin de conversation : plus rien à jouer de la précédente. */
     if (next != CONVERSATION_READY) audio_play_flush();
@@ -189,6 +190,16 @@ static void handle_text(const char *body, size_t length)
         const cJSON *volume = cJSON_GetObjectItem(message, "volume");
         const char *name = cJSON_GetStringValue(cJSON_GetObjectItem(message, "name"));
         if (cJSON_IsNumber(volume)) board_set_volume(volume->valueint);
+        /* Un serveur plus ancien ne ferme pas la conversation au bouton : le bouton garde
+         * alors son rôle de micro. */
+        bool session_end = false;
+        const cJSON *feature = NULL;
+        cJSON_ArrayForEach(feature, cJSON_GetObjectItem(message, "features"))
+        {
+            const char *value = cJSON_GetStringValue(feature);
+            if (value && strcmp(value, "session_end") == 0) session_end = true;
+        }
+        satellite.session_end = session_end;
         ESP_LOGI(TAG, "Accueilli par Cornelius : « %s »", name ? name : "?");
         satellite.online = true;
     } else if (strcmp(type, "listen") == 0) {
@@ -239,6 +250,7 @@ static void offline(void)
     /* Hors ligne, Cornelius fait sonner le miroir à la place. */
     satellite.ringing = false;
     satellite.online = false;
+    satellite.session_end = false;
     satellite.listen = false;
     satellite.pairing = false;
     set_conversation(CONVERSATION_IDLE);
@@ -368,6 +380,11 @@ void link_send_frame(const int16_t *frame)
 {
     if (!satellite.online || !satellite.listen || satellite.muted || !frames || !frame_pool)
         return;
+    /* Bouton de vie privée pendant la conversation : plus aucun son ne part, même si le
+     * serveur tarde à la fermer ou ne répond pas. */
+    if (satellite.conversation != CONVERSATION_IDLE &&
+        satellite.end_pressed_at_us > satellite.conversation_at_us)
+        return;
     /* La tâche du micro ne doit jamais attendre le Wi-Fi : la trame est copiée dans un
      * emplacement libre et confiée à la tâche d'envoi. File pleine : la plus ancienne part. */
     const uint8_t slot = next_slot;
@@ -432,6 +449,15 @@ void link_send_ring_stop(void)
     cJSON_AddStringToObject(ring, "type", "ring");
     cJSON_AddStringToObject(ring, "action", "stop");
     send_json(ring);
+}
+
+void link_send_session_end(void)
+{
+    if (!client || !esp_websocket_client_is_connected(client)) return;
+    cJSON *session = cJSON_CreateObject();
+    cJSON_AddStringToObject(session, "type", "session");
+    cJSON_AddStringToObject(session, "action", "end");
+    send_json(session);
 }
 
 void link_send_log(const char *message)

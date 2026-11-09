@@ -57,6 +57,14 @@ static void button_task(void *arg)
             link_send_ring_stop();
             ESP_LOGI(TAG, "Sonnerie arrêtée");
             pressed_for = 0;
+        } else if (pressed_for >= 2 && satellite.session_end &&
+                   satellite.conversation != CONVERSATION_IDLE) {
+            /* appui bref pendant la conversation : le micro se tait tout de suite, puis Cornelius
+             * ferme la conversation sans attendre le silence */
+            satellite.end_pressed_at_us = esp_timer_get_time();
+            link_send_session_end();
+            ESP_LOGI(TAG, "Fin de conversation demandée");
+            pressed_for = 0;
         } else if (pressed_for >= 2) { /* appui bref (anti-rebond 40 ms) : micro coupé ou rouvert */
             satellite.muted = !satellite.muted;
             save_muted(satellite.muted);
